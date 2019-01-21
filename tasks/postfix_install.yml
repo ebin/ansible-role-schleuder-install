@@ -1,0 +1,75 @@
+---
+# To install postfix
+
+- name: Install postfix
+  apt:
+     name: "{{ postfix_version }}"
+  register: postfix_result
+
+- name: print the installation result
+  debug:
+          msg: "postfix install: {{ postfix_result.stdout }}"
+  when:  postfix_result.stdout is defined
+
+
+- name: check if entry for schleuder exists in master.cf
+  shell: grep "^schleuder" /etc/postfix/master.cf | wc -l
+  ignore_errors: yes
+  register: schleuder_grep
+
+- name: debug msg
+  debug:
+     msg: "{{ schleuder_grep.stdout }}"
+
+- name: add schleuder entry to master.cf
+  blockinfile:
+          dest: /etc/postfix/master.cf
+          block: |
+              schleuder  unix  -       n       n       -       -       pipe
+                 flags=DRhu user=schleuder argv=/usr/bin/schleuder work ${recipient}
+          backup: yes       
+  when: schleuder_grep.stdout == "0"
+
+
+- name: check if entry exists in main.cf
+  shell: grep "^schleuder" /etc/postfix/main.cf | wc -l
+  ignore_errors: yes
+  register: schleuder_main_grep
+
+- name: debug msg for main.cf
+  debug:
+     msg: "{{ schleuder_main_grep.stdout }}"
+
+- name: To dedicate a whole domain to schleuder, add entries to main.cf
+  blockinfile:
+          dest: /etc/postfix/main.cf
+          block: |
+              schleuder_destination_recipient_limit = 1
+              virtual_mailbox_domains = sqlite:/etc/postfix/schleuder_domain_sqlite.cf
+              virtual_transport       = schleuder
+              virtual_alias_maps      = hash:/etc/postfix/virtual_aliases
+              virtual_mailbox_maps    = sqlite:/etc/postfix/schleuder_list_sqlite.cf
+          backup: yes
+  when: schleuder_main_grep.stdout == "0"
+
+
+- name: setup file schleuder_domain_sqlite.cf
+  copy:
+     src: schleuder_domain_sqlite.cf
+     dest: /etc/postfix/schleuder_domain_sqlite.cf
+                     
+- name: setup file schleuder_list_sqlite.cf
+  copy:
+     src: schleuder_list_sqlite.cf
+     dest: /etc/postfix/schleuder_domain_sqlite.cf
+
+- name: restart service postfix
+  service:
+      name: postfix
+      state: restarted
+  register: postfix_rst
+
+  
+- name: output of postfix service restart
+  debug:
+     msg: "{{ postfix_rst.status }}"

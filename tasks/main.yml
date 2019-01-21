@@ -1,0 +1,10 @@
+---
+# tasks file for schleuder-install
+- name: Postfix Installation
+  include: postfix_install.yml
+
+- name: Schleuder Installation
+  include: schleuder_install.yml
+
+- name: Install schleuder web
+  include: schleuder_web_install.yml

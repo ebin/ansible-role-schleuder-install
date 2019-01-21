@@ -1,0 +1,74 @@
+---
+# tasks file for schleuder-install
+
+- name: Insert debain repo
+  command: echo "deb http://deb.debian.org/debian stretch-backports main" > /etc/apt/sources.list.d/stretch-backports.list
+
+
+- name: Install schleuder dependencies
+  apt:
+     name: "{{ item }}"
+  with_items:
+     - ruby
+     - ruby-activerecord
+     - ruby-sinatra
+     - ruby-sinatra-contrib
+     - ruby-sqlite3
+     - ruby-thor
+     - rake
+     - thin
+     - ruby-bundler
+
+
+- name: Copy schleuder deb packages to installation server
+  copy: src={{ item }}  dest=/tmp
+  with_items:
+       - schleuder_3.3.0-4_bpo9+1_all.deb 
+       - schleuder-cli_0.1.0-1_bpo9+1_all.deb
+       - ruby-gpgme_2.0.16-1_bpo9+1_amd64.deb
+       - ruby-mail-gpg_0.4.0-1_bpo9+1_all.deb 
+       - libhavege1_1.9.1-5+deb9u1_amd64.deb
+       - haveged_1.9.1-5+deb9u1_amd64.deb
+
+
+- name: Install schleuder dependency packages ruby-gpme & ruby-mail-gpg 
+  apt:
+    deb: "/tmp/{{ item }}"
+  with_items:
+       - ruby-gpgme_2.0.16-1_bpo9+1_amd64.deb
+       - ruby-mail-gpg_0.4.0-1_bpo9+1_all.deb 
+       - libhavege1_1.9.1-5+deb9u1_amd64.deb
+       - haveged_1.9.1-5+deb9u1_amd64.deb
+
+
+- name: Install schleuder apt package
+  apt:
+    deb: /tmp/schleuder_3.3.0-4_bpo9+1_all.deb
+  register: schleuder_output
+  
+- name: Print the resut of apt package installation
+  debug: 
+    msg: "{{ schleuder_output.stdout }}"
+
+- name: Install schleuder-cli apt package
+  apt:
+    deb: /tmp/schleuder-cli_0.1.0-1_bpo9+1_all.deb
+  register: schleudercli_output
+  
+- name: Print the resut of apt package installation
+  debug: 
+    msg: "{{ schleudercli_output.stdout  }}"
+
+
+- name: Start the service schleuder-api-daemon
+  systemd:
+          state: started
+          name: schleuder-api-daemon
+          enabled: yes
+
+- name: schleuder-cli lists
+  command: schleuder-cli lists list
+  ignore_errors: yes
+  register: schleuder_cli_lists
+
+

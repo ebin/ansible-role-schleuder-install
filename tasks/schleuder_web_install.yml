@@ -1,0 +1,59 @@
+---
+- name: Install schleuder-web dependencies
+  apt:
+     name: "{{ item }}"
+  with_items:
+      - libxml2-dev
+      - zlib1g-dev
+      - libsqlite3-dev
+
+- name: create the directory /var/lib/schleuder-web
+  file:
+       path: /var/lib/schleuder-web
+       state: directory
+       mode: 0755
+
+- name: check if the schleuder-web-master folder exists
+  stat:
+      path:  /var/lib/schleuder-web/schleuder-web-master
+  register: schleuder_wm_dir
+
+- name: output
+  debug:
+       msg: "{{ schleuder_wm_dir.stat.exists }}"
+
+- name: untar schleuder-web.tar.gz file
+  unarchive:
+          src: schleuder-web-master.tar.gz
+          dest: /var/lib/schleuder-web
+  when: schleuder_wm_dir.stat.isdir is not defined
+
+- name: Get schleuder fingerprint cert
+  shell: schleuder cert fingerprint | awk '{print $4}'
+  register: schleuder_cert_fingerprint
+
+- name: show schleuder fingerprint cert
+  debug:
+       msg: "{{ schleuder_cert_fingerprint.stdout }}"
+
+#- name: Schleuder API-key to authenticate clients
+#  shell: schleuder new_api_key
+#  register: schleuder_api_key
+
+#- name: show schleuder api key
+#  debug: 
+#     msg: "{{ schleuder_api_key.stdout }}"
+
+#
+- name: update tls_fingerprint in schleuder-web.yml
+  lineinfile:
+     dest: /var/lib/schleuder-web/schleuder-web-master/config/schleuder-web.yml
+     regexp: 'tls_fingerprint\:'
+     line: '    tls_fingerprint: <%= ENV["SCHLEUDER_TLS_FINGERPRINT"] || "{{ schleuder_cert_fingerprint.stdout }}" %>'
+
+- name: update tls_fingerprint in schleuder-cli.yml
+  lineinfile:
+     dest: /root/.schleuder-cli/schleuder-cli.yml
+     regexp: 'tls_fingerprint\:'
+     line: "tls_fingerprint: {{ schleuder_cert_fingerprint.stdout }}"
+
