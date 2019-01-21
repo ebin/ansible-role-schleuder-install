@@ -1,0 +1,4 @@
+dbpath = /var/lib/schleuder/db.sqlite
+query = select distinct substr(email, instr(email, '@') + 1) from lists
+        where email like '%%%s'
+

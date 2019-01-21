@@ -1,0 +1,10 @@
+---
+# defaults file for schleuder-install
+#
+schleuder_packages:
+  - stretch-backports
+  - schleuder
+  - schleuder-cli
+
+
+

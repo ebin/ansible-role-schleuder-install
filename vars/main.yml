@@ -1,0 +1,4 @@
+---
+# vars file for schleuder-install
+#
+postfix_version: "postfix"
