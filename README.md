@@ -1,31 +1,43 @@
 Role Name
 =========
 
-A brief description of the role goes here.
+This role is to install Schleuder.org on debian stretch.
+Schleuder.org can used to implement an encrypted emailing list, where subscribers can exchange encrypted emails among themselves using open pgp encryption.
 
 Requirements
 ------------
-
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+This is role can used to install schleuder on debian stretch
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+postfix version you want to use can be define in,
+
+vars\main.yml
+
+postfix_version: "postfix"
+
+
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+Most of the dependent installation files are in the folder,
+
+files\
+
 
 Example Playbook
 ----------------
 
 Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+       
+        ---
+        - hosts: servers
+          become: yes
+          become_user: root
+          roles:
+               - schleuder-install
 
 License
 -------
